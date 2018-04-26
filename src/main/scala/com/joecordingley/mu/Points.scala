@@ -55,11 +55,11 @@ object Points {
 
   }
 
-  def addBonusesAndPenalties(scores:Map[Player,Int],chief:Player,partner:Player,chiefTrump:Trump,cardsBid:Int):Map[Player,Int] = {
-    import Util._
-    val bonuses = getBonusesAndPenalties(scores,chief,partner,chiefTrump,cardsBid)
-    mapKeys[Player,Int](bonuses.keys.toSet).modify{case (player,score) => (player,score + bonuses(player))}(scores)
+ // def addBonusesAndPenalties(scores:Map[Player,Int],chief:Player,partner:Player,chiefTrump:Trump,cardsBid:Int):Map[Player,Int] = {
+ //   import Util._
+ //   val bonuses = getBonusesAndPenalties(scores,chief,partner,chiefTrump,cardsBid)
+ //   mapKeys[Player,Int](bonuses.keys.toSet).modify{case (player,score) => (player,score + bonuses(player))}(scores)
 
-  }
+ // }
 
 }
