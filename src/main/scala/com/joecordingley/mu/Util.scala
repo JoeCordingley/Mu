@@ -1,4 +1,4 @@
-//package com.joecordingley.mu
+package com.joecordingley.mu
 //
 //import monocle.{Iso, Lens, Traversal}
 //import org.typelevel.discipline.Predicate
@@ -22,3 +22,9 @@
 //  def mapKeys[A,B](s:Set[A]):Traversal[Map[A,B],(A,B)]= mapFilter[A,B]{case(a,_) =>s(a)} composeTraversal mapTraversal
 //
 //}
+
+object Util {
+  def orderingFromOrderings[A](orderings:List[Ordering[A]]):Ordering[A] = new Ordering[A]{
+    override def compare(x:A,y:A) = orderings.toStream.map(_.compare(x,y)).find(_!=0).getOrElse(0)
+  }
+}
