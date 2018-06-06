@@ -27,7 +27,7 @@ class AuctionTest extends FreeSpec with Matchers {
   val fivePasses = List.fill(5)(Pass)
   val fourPasses = List.fill(4)(Pass)
 
-  type BidState[A] = State[Auction, A]
+  type BidState[A] = State[AuctionObject, A]
   val bidRoundStateCompiler = new (AuctionADT ~> BidState){
     def apply[A](fa: AuctionADT[A]):BidState[A] = fa match { 
       case PlaceBid(b) => State.modify(_.bid(b))
@@ -49,7 +49,7 @@ class AuctionTest extends FreeSpec with Matchers {
         "should return unfinished" in {
           val bids = twoCardRaise :: raise :: fourPasses
           val actual = placeBidsRunInitial(bids)._1.status
-          actual should equal (Unfinished)
+          actual should equal (UnfinishedAuction)
         }
       }
       "when one definite winner" -{

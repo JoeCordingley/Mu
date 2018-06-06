@@ -1,50 +1,48 @@
 package com.joecordingley.mu
 
 import cats.free.Free
-import cats.InjectK
-import cats.arrow.FunctionK
 
-sealed trait CardPlayADT[A]
+
 sealed trait CardPlayStatus
-trait FinishedCardPlay extends CardPlayStatus
-case object UnfinishedF extends CardPlayStatus with TrickPlayStatus
+sealed trait CardPlayScores
+case class FinishedCardPlay(scores: CardPlayScores) extends CardPlayStatus
+sealed trait TrickPlayStatus
+case object UnfinishedCardPlay extends CardPlayStatus 
+case object UnfinishedTrickPlay extends TrickPlayStatus
+case class FinishedTrickPlay(winner: Player) extends TrickPlayStatus
 
 object CardPlayRound {
 
   type CardPlayFree[A] = Free[CardPlayADT,A]
 
   def getStatus:CardPlayFree[CardPlayStatus] = ???
-  def playTrick:CardPlayFree[FinishedTrickPlay] = TrickPlay.play mapK (FunctionK lift identity)
-  def finishCardPlay(f:FinishedCardPlay):CardPlayFree[FinishedCardPlay] = Free.pure(f)
+  def getTrickStatus:CardPlayFree[TrickPlayStatus] = ???
+  def finishCardPlay(scores:CardPlayScores):CardPlayFree[CardPlayScores] = Free.pure(scores)
+  def finishTrickPlay:CardPlayFree[Unit] = Free.pure(())
+  def currentPlayer:CardPlayFree[Player] = ???
+  def getCard(player:Player):CardPlayFree[Card] = ???
+  def playCard(card:Card):CardPlayFree[Unit] = ???
 
-  def play: CardPlayFree[FinishedCardPlay] = for {
+  def play: CardPlayFree[CardPlayScores] = for {
     status <- getStatus
     finish <- status match {
-      case f:FinishedCardPlay => finishCardPlay(f)
-      case UnfinishedF => playTrick.flatMap(_ => play)
+      case FinishedCardPlay(scores) => finishCardPlay(scores)
+      case UnfinishedCardPlay => playTrick.flatMap(_ => play)
     }
   } yield finish
 
-}
-
-sealed trait TrickPlayADT[A] extends CardPlayADT[A]
-sealed trait TrickPlayStatus
-trait FinishedTrickPlay extends TrickPlayStatus
-
-object TrickPlay {
-
-  type TrickPlayFree[A] = Free[TrickPlayADT,A]
-
-  def getStatus:TrickPlayFree[TrickPlayStatus] = ???
-  def getCard:TrickPlayFree[Unit] = ???
-  def finishTrickPlay(f:FinishedTrickPlay):TrickPlayFree[FinishedTrickPlay] = Free.pure(f)
-
-  def play: TrickPlayFree[FinishedTrickPlay] = for {
-    status <- getStatus
-    finish <- status match {
-      case f:FinishedTrickPlay => finishTrickPlay(f)
-      case UnfinishedF => getCard.flatMap(_ => play)
+  def playTrick: CardPlayFree[Unit] = for {
+    status <- getTrickStatus
+    _ <- status match {
+      case _:FinishedTrickPlay => finishTrickPlay
+      case UnfinishedTrickPlay => getCardFromNextPlayer.flatMap(_ => playTrick)
     }
-  } yield finish
+  } yield ()
+
+  def getCardFromNextPlayer:CardPlayFree[Unit] = for {
+    player <- currentPlayer
+    card <- getCard(player)
+    _ <- playCard(card)
+  } yield ()
 
 }
