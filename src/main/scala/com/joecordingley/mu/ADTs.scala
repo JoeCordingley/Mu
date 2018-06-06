@@ -1,7 +1,5 @@
 package com.joecordingley.mu
 
-
-
 sealed trait CardPlayADT[A]
 
 
