@@ -27,4 +27,16 @@ object Util {
   def orderingFromOrderings[A](orderings:List[Ordering[A]]):Ordering[A] = new Ordering[A]{
     override def compare(x:A,y:A) = orderings.toStream.map(_.compare(x,y)).find(_!=0).getOrElse(0)
   }
+  implicit class ListOps[A](l:List[A]) {
+    def outrightFirst(implicit o:Ordering[A]):Option[A] = l.sorted match {
+      case List(a1) => Some(a1)
+      case a1 :: a2 :: _ if o.compare(a1,a2) < 0 => Some(a1)
+      case _ => None
+    }
+  }
+
+
+}
+object SingleElementSet {
+  def unapply[A](s:Set[A]):Option[A] = if (s.size ==1) Some(s.head) else None
 }
