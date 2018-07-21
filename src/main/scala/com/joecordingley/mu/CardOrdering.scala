@@ -10,7 +10,7 @@ object CardOrdering {
 
   def cardIsTrump(trump: Trump)(card:Card):Boolean = trump match {
     case SuitTrump(suit) => card.suit == suit
-    case NumberTrump(rank) => card.rank == rank
+    case NumberTrump(rank) => card.rank.value == rank
     case NoTrump => false
   }
 
@@ -19,7 +19,7 @@ object CardOrdering {
       cardIsMajorTrump(trumps)(card),
       cardIsMinorTrump(trumps)(card),
       cardIsOfLedSuit(cardLed)(card),
-      card.rank
+      card.rank.value
     )
   }
 }

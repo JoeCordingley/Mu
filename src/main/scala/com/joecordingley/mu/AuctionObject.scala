@@ -2,56 +2,52 @@ package com.joecordingley.mu
 import Auction._
 import com.joecordingley.mu.Util._
 
+
 sealed trait Bid
 case object Pass extends Bid
-case class Raise(cards:List[Card]) extends Bid
+case class Raise(cards:Set[Card]) extends Bid
 
 object Auction {
- 
+  def initial(playerHands:List[(Player,InitialHand)]):UnfinishedAuction = new UnfinishedAuction(AuctionState(playerHands,Vector()))
 
-  def initial(players:Vector[Player]):UnfinishedAuction = new UnfinishedAuction(AuctionState(players,Vector()))
-
-  val viceOrdering:Ordering[List[Card]] = {
-    val sizeOrdering = Ordering.by[List[Card],Int](_.size)
-    def orderingForRank(rank:Int) = Ordering.by[List[Card],Int](_.filter(_.rank == rank).size) 
-    val viceOrderingsInOrder = sizeOrdering :: (9 to 1 by -1).map(orderingForRank).toList
-    Util.orderingFromOrderings(viceOrderingsInOrder).reverse 
+  val viceOrdering:Ordering[Set[Card]] = {
+    def amtForRank(rank:Int,cards:Set[Card]) = cards.filter(_.rank.value == rank).size
+    def amtForAllRanks(cards:Set[Card]) = (9 to 0 by -1).map(rank => amtForRank(rank,cards)).toList
+    Ordering.by[Set[Card],Iterable[Int]](cards => cards.size :: amtForAllRanks(cards))
   }
-
+  type InitialHand = Set[Card]
 }
-
-
-//case class Finished(finishedBidRound: BidRoundOutcome) extends AuctionStatus
 
 sealed trait ResolvedAuction
 sealed trait AuctionOutcome
 case class FinishedAuctionObject(state: AuctionState, outcome: AuctionOutcome) extends AuctionObject
-case class AuctionState(players: Vector[Player], bids:Vector[Bid]) {
-  import Auction._
+case class AuctionState(playerHands: List[(Player,InitialHand)], bids:Vector[Bid]) {
+  val players = playerHands.map(_._1)
   val playerCount = players.size
   val playerSequence = Stream.continually(players).flatten
   val playerBids = playerSequence.zip(bids).toList
-  val playerBidsReversed = playerBids.reverse
   val totals = {
-    val empties:Map[Player,List[Card]] = players.map(_ -> Nil).toMap
+    val empties:Map[Player,Set[Card]] = players.map(_ -> Set.empty[Card]).toMap
     playerBids.foldLeft(empties){
-      case (acc, (player,Raise(cards))) => acc.updated(player, acc(player) ::: cards)
+      case (acc, (player,Raise(cards))) => acc.updated(player, acc(player) ++ cards)
       case (acc, _) => acc
     }
+  }
+  val cardsInHand:Map[Player,Set[Card]] = totals.foldLeft(playerHands.toMap) {
+    case (acc,(player,bidTotal)) => acc.updated(player,acc(player) &~ bidTotal)
   }
   val maxBid:Int = totals.values.map(_.size).max
   val leaders:Set[Player] = totals.collect{
     case (player,bid) if bid.size == maxBid => player
   }.toSet
-  val lastOfLeadersToRaise:Option[Player] = if (leaders.isEmpty) None 
-    else playerBidsReversed.collectFirst{
-      case (player, _:Raise) if leaders(player) => player
-    }
+  val lastOfLeadersToRaise:Option[Player] = playerBids.reverse.collectFirst{
+    case (player, _:Raise) if leaders(player) => player
+  }
 
   def isFinished:Boolean = if (bids.size < playerCount ) false else bids.reverse.take(playerCount).forall(_.isInstanceOf[Pass.type])
 
   val vice:Option[Player] = leaders match {
-    case SingleElementSet(leader) => ( totals - leader ).toList.outrightFirst(viceOrdering.on(_._2)).map(_._1)
+    case SingleElementSet(leader) => ( totals - leader ).toList.outrightHighest(viceOrdering.on(_._2)).map(_._1)
     case _ => None
   } 
   

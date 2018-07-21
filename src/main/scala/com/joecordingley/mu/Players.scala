@@ -27,6 +27,4 @@ package com.joecordingley.mu
 //}
 //trait Event
 trait Player{
-
-
 }

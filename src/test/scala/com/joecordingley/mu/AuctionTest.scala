@@ -6,24 +6,25 @@ import cats.effect.IO
 import AuctionPlay._
 import cats.implicits._
 import cats.data.State
+import com.joecordingley.mu.Auction._
 
 class AuctionTest extends FreeSpec with Matchers {
 
-  def dummyPlayer  = new Player {}
-  case class DummyPlayer(i:Int) extends Player
-  val fivePlayers = (1 to 5).toVector.map(DummyPlayer(_))
-  val redNine = Card(Red,9)
-  val blueEight = Card(Blue,8)
-  val yellow7 = Card(Yellow,7)
-  val purple4 = Card(Purple,4)
-  val green9 = Card(Green,9)
-  val red9 = List(redNine)
-  val twoCards = List(blueEight,yellow7)
-  val twoCardRaise = Raise(twoCards)
+  case class DummyPlayer(i:Int) extends Player 
+  val fivePlayers = (1 to 5).toList.map(DummyPlayer(_))
+  val playerHands:List[(Player,InitialHand)] = fivePlayers.map(_->Set.empty[Card]).toList
+  val redNine = Card(Red,OtherRank(9))
+  val blueEight = Card(Blue,OtherRank(8))
+  val yellow7 = Card(Yellow,FirstSeven)
+  val purple4 = Card(Purple,OtherRank(4))
+  val green9 = Card(Green,OtherRank(9))
+  val red9 = Set(redNine)
+  val twoCards = Set(blueEight,yellow7)
+  val twoCardRaise = Raise(twoCards) 
   val raise = Raise(red9)
-  val lowerRaise = Raise(List(purple4))
-  val equalRaise = Raise(List(green9))
-  val initial = Auction.initial(fivePlayers)
+  val lowerRaise = Raise(Set(purple4))
+  val equalRaise = Raise(Set(green9))
+  val initial = Auction.initial(playerHands)
   val fivePasses = List.fill(5)(Pass)
   val fourPasses = List.fill(4)(Pass)
 
