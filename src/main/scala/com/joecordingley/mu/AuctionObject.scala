@@ -51,6 +51,7 @@ case class AuctionState(playerHands: List[(Player,InitialHand)], bids:Vector[Bid
     case _ => None
   } 
   
+  val currentPlayer:Player = players(bids.size % playerCount)
 }
 case class TwoTrumps(chief:Player,chiefTrump:Trump,partner:Player,viceTrump:Trump) extends ResolvedAuction
 case class OneTrump(chief:Player,chiefTrump:Trump,partner:Player) extends ResolvedAuction

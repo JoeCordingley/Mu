@@ -27,4 +27,5 @@ package com.joecordingley.mu
 //}
 //trait Event
 trait Player{
+  val id: Int
 }

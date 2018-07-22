@@ -10,7 +10,7 @@ import com.joecordingley.mu.Auction._
 
 class AuctionTest extends FreeSpec with Matchers {
 
-  case class DummyPlayer(i:Int) extends Player 
+  case class DummyPlayer(id:Int) extends Player 
   val fivePlayers = (1 to 5).toList.map(DummyPlayer(_))
   val playerHands:List[(Player,InitialHand)] = fivePlayers.map(_->Set.empty[Card]).toList
   val redNine = Card(Red,OtherRank(9))

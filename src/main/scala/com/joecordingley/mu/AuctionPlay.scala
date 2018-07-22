@@ -10,13 +10,15 @@ import cats.free.Free.liftF
 import cats.implicits._
 
 sealed trait AuctionADT[A]
+sealed trait PlayerADT[A] extends AuctionADT[A]
+sealed trait AuctionStateADT[A] extends AuctionADT[A]
 
-case class PlaceBid(bid:Bid) extends AuctionADT[Unit]
-case object GetStatus extends AuctionADT[AuctionStatus]
-case class GetTrump(player:Player) extends AuctionADT[Trump]
-case class GetPartner(player:Player) extends AuctionADT[Player]
-case object NextPlayer extends AuctionADT[Player]
-case class GetBid(player:Player) extends AuctionADT[Bid]
+case class PlaceBid(bid:Bid) extends AuctionStateADT[Unit]
+case object GetStatus extends AuctionStateADT[AuctionStatus]
+case class GetTrump(player:Player) extends PlayerADT[Trump]
+case class GetPartner(player:Player) extends PlayerADT[Player]
+case object NextPlayer extends AuctionStateADT[Player]
+case class GetBid(player:Player) extends PlayerADT[Bid]
 sealed trait AuctionStatus
 case object UnfinishedAuctionStatus extends AuctionStatus
 case class FinishedAuctionStatus(outcome: AuctionOutcome) extends AuctionStatus
