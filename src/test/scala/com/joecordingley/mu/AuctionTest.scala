@@ -1,6 +1,6 @@
 package com.joecordingley.mu
 
-import org.scalatest.{FreeSpec,Matchers}
+import org.scalatest.{FreeSpec, Matchers}
 import cats._
 import cats.effect.IO
 import AuctionPlay._
@@ -10,17 +10,18 @@ import com.joecordingley.mu.Auction._
 
 class AuctionTest extends FreeSpec with Matchers {
 
-  case class DummyPlayer(id:Int) extends Player 
+  case class DummyPlayer(id: Int) extends Player
   val fivePlayers = (1 to 5).toList.map(DummyPlayer(_))
-  val playerHands:List[(Player,InitialHand)] = fivePlayers.map(_->Set.empty[Card]).toList
-  val redNine = Card(Red,OtherRank(9))
-  val blueEight = Card(Blue,OtherRank(8))
-  val yellow7 = Card(Yellow,FirstSeven)
-  val purple4 = Card(Purple,OtherRank(4))
-  val green9 = Card(Green,OtherRank(9))
+  val playerHands: List[(Player, InitialHand)] =
+    fivePlayers.map(_ -> Set.empty[Card]).toList
+  val redNine = Card(Red, OtherRank(9))
+  val blueEight = Card(Blue, OtherRank(8))
+  val yellow7 = Card(Yellow, FirstSeven)
+  val purple4 = Card(Purple, OtherRank(4))
+  val green9 = Card(Green, OtherRank(9))
   val red9 = Set(redNine)
-  val twoCards = Set(blueEight,yellow7)
-  val twoCardRaise = Raise(twoCards) 
+  val twoCards = Set(blueEight, yellow7)
+  val twoCardRaise = Raise(twoCards)
   val raise = Raise(red9)
   val lowerRaise = Raise(Set(purple4))
   val equalRaise = Raise(Set(green9))
@@ -29,25 +30,29 @@ class AuctionTest extends FreeSpec with Matchers {
   val fourPasses = List.fill(4)(Pass)
 
   type BidState[A] = State[AuctionObject, A]
-  
-  val bidRoundStateCompiler = new (AuctionADT ~> BidState){
-    def apply[A](fa: AuctionADT[A]):BidState[A] = fa match { 
-      case PlaceBid(b) => State.modify{
-        case s: UnfinishedAuction => s.bid(b)
-        case _ => throw new Exception("is finished")
-      }
+
+  val bidRoundStateCompiler = new (AuctionADT ~> BidState) {
+    def apply[A](fa: AuctionADT[A]): BidState[A] = fa match {
+      case PlaceBid(b) =>
+        State.modify {
+          case s: UnfinishedAuction => s.bid(b)
+          case _                    => throw new Exception("is finished")
+        }
       case _ => throw new Exception("unexpected input")
     }
   }
 
-  def placeBidsOnInitial(bids:List[Bid]) = placeBids(bids)
-    .foldMap(bidRoundStateCompiler)
-    .run(initial)
-    .value
-    ._1
+  def placeBidsOnInitial(bids: List[Bid]) =
+    placeBids(bids)
+      .foldMap(bidRoundStateCompiler)
+      .run(initial)
+      .value
+      ._1
 
-  def placeBids(bids: List[Bid]):AuctionFree[Unit] = bids.traverse(AuctionPlay.placeBid)
-    .map(_ =>())
+  def placeBids(bids: List[Bid]): AuctionFree[Unit] =
+    bids
+      .traverse(AuctionPlay.placeBid)
+      .map(_ => ())
 
   "auction" - {
     "for 5 players" - {
@@ -55,18 +60,20 @@ class AuctionTest extends FreeSpec with Matchers {
         "should return unfinished" in {
           val bids = twoCardRaise :: raise :: fourPasses
           val actual = placeBidsOnInitial(bids)
-          actual shouldBe an [UnfinishedAuction]
+          actual shouldBe an[UnfinishedAuction]
         }
       }
-      "when one definite winner" -{
-        "and one definite vice" -{
+      "when one definite winner" - {
+        "and one definite vice" - {
           "should pick the correct chief and vice" in {
             val chief = fivePlayers(0)
             val vice = fivePlayers(1)
             val bids = twoCardRaise :: raise :: fivePasses
             val actual = placeBidsOnInitial(bids)
-            actual shouldBe a [FinishedAuctionObject]
-            actual.asInstanceOf[FinishedAuctionObject].outcome shouldEqual ChiefAndVice(chief,vice)
+            actual shouldBe a[FinishedAuctionObject]
+            actual
+              .asInstanceOf[FinishedAuctionObject]
+              .outcome shouldEqual ChiefAndVice(chief, vice)
           }
         }
         "and a tiebreak vice" - {
@@ -75,8 +82,10 @@ class AuctionTest extends FreeSpec with Matchers {
             val vice = fivePlayers(1)
             val bids = twoCardRaise :: raise :: lowerRaise :: fivePasses
             val actual = placeBidsOnInitial(bids)
-            actual shouldBe a [FinishedAuctionObject]
-            actual.asInstanceOf[FinishedAuctionObject].outcome shouldEqual ChiefAndVice(chief,vice)
+            actual shouldBe a[FinishedAuctionObject]
+            actual
+              .asInstanceOf[FinishedAuctionObject]
+              .outcome shouldEqual ChiefAndVice(chief, vice)
           }
         }
         "but no definite vice" - {
@@ -84,17 +93,21 @@ class AuctionTest extends FreeSpec with Matchers {
             val chief = fivePlayers(0)
             val bids = twoCardRaise :: raise :: equalRaise :: fivePasses
             val actual = placeBidsOnInitial(bids)
-            actual shouldBe a [FinishedAuctionObject]
-            actual.asInstanceOf[FinishedAuctionObject].outcome shouldEqual ChiefOnly(chief)
+            actual shouldBe a[FinishedAuctionObject]
+            actual
+              .asInstanceOf[FinishedAuctionObject]
+              .outcome shouldEqual ChiefOnly(chief)
           }
         }
       }
-      "with five passes" -{
+      "with five passes" - {
         "should return Eklat with no points" in {
           val bids = fivePasses
           val actual = placeBidsOnInitial(bids)
-          actual shouldBe a [FinishedAuctionObject]
-          actual.asInstanceOf[FinishedAuctionObject].outcome shouldEqual EklatNoPoints
+          actual shouldBe a[FinishedAuctionObject]
+          actual
+            .asInstanceOf[FinishedAuctionObject]
+            .outcome shouldEqual EklatNoPoints
         }
       }
       "with no definite winner" - {
@@ -103,11 +116,13 @@ class AuctionTest extends FreeSpec with Matchers {
           val offender = fivePlayers(1)
           val offendeds = Set[Player](fivePlayers(0))
           val actual = placeBidsOnInitial(bids)
-          actual shouldBe a [FinishedAuctionObject]
-          actual.asInstanceOf[FinishedAuctionObject].outcome shouldEqual Eklat(offender,offendeds)
+          actual shouldBe a[FinishedAuctionObject]
+          actual.asInstanceOf[FinishedAuctionObject].outcome shouldEqual Eklat(
+            offender,
+            offendeds)
         }
       }
     }
   }
-  
+
 }

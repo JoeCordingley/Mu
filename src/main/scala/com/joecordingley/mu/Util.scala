@@ -24,16 +24,16 @@ package com.joecordingley.mu
 //}
 
 object Util {
-  implicit class ListOps[A](l:List[A]) {
-    def outrightHighest(implicit o:Ordering[A]):Option[A] = l.sorted.reverse match {
-      case List(a1) => Some(a1)
-      case a1 :: a2 :: _ if o.compare(a1,a2) != 0 => Some(a1)
-      case _ => None
-    }
+  implicit class ListOps[A](l: List[A]) {
+    def outrightHighest(implicit o: Ordering[A]): Option[A] =
+      l.sorted.reverse match {
+        case List(a1)                                => Some(a1)
+        case a1 :: a2 :: _ if o.compare(a1, a2) != 0 => Some(a1)
+        case _                                       => None
+      }
   }
-
 
 }
 object SingleElementSet {
-  def unapply[A](s:Set[A]):Option[A] = if (s.size ==1) Some(s.head) else None
+  def unapply[A](s: Set[A]): Option[A] = if (s.size == 1) Some(s.head) else None
 }

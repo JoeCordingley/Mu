@@ -10,7 +10,8 @@ import scala.language.implicitConversions
   */
 object StateHelper {
 
-  implicit def lift[S,A,R](state:State[S,A])(implicit lens:Lens[R,S]):State[R,A] =
-    state.transformS(lens.get, (r, s) => lens.modify(_=>s)(r))
+  implicit def lift[S, A, R](state: State[S, A])(
+      implicit lens: Lens[R, S]): State[R, A] =
+    state.transformS(lens.get, (r, s) => lens.modify(_ => s)(r))
 
 }
