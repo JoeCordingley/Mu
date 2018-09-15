@@ -10,8 +10,7 @@ import com.joecordingley.mu.Auction._
 
 class AuctionTest extends FreeSpec with Matchers {
 
-  case class DummyPlayer(id: Int) extends Player
-  val fivePlayers = (1 to 5).toList.map(DummyPlayer(_))
+  val fivePlayers = (1 to 5).toList.map(Player(_))
   val playerHands: List[(Player, InitialHand)] =
     fivePlayers.map(_ -> Set.empty[Card]).toList
   val redNine = Card(Red, OtherRank(9))
@@ -74,6 +73,7 @@ class AuctionTest extends FreeSpec with Matchers {
             actual
               .asInstanceOf[FinishedAuctionObject]
               .outcome shouldEqual ChiefAndVice(chief, vice)
+            actual.state.validPartners shouldEqual fivePlayers.toSet - chief - vice
           }
         }
         "and a tiebreak vice" - {
@@ -86,6 +86,7 @@ class AuctionTest extends FreeSpec with Matchers {
             actual
               .asInstanceOf[FinishedAuctionObject]
               .outcome shouldEqual ChiefAndVice(chief, vice)
+            actual.state.validPartners shouldEqual fivePlayers.toSet - chief - vice
           }
         }
         "but no definite vice" - {
@@ -97,6 +98,7 @@ class AuctionTest extends FreeSpec with Matchers {
             actual
               .asInstanceOf[FinishedAuctionObject]
               .outcome shouldEqual ChiefOnly(chief)
+            actual.state.validPartners shouldEqual fivePlayers.toSet - chief
           }
         }
       }
@@ -124,5 +126,4 @@ class AuctionTest extends FreeSpec with Matchers {
       }
     }
   }
-
 }

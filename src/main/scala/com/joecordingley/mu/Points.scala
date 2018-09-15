@@ -32,43 +32,61 @@ object Points {
 
     def scoreMet(cardsBid: Int): Boolean =
       scoreGot > goal(numberOfPlayers, cardsBid)
-    def missedBy(cardsBid: Int, acc: Int): Int =
-      if (scoreMet(cardsBid)) acc else missedBy(cardsBid - 1, acc + 1)
+    def missedBy(cardsBid: Int): Int =
+      cardsBid - ((cardsBid to 1 by -1) find scoreMet getOrElse 0)
 
     if (scoreMet(cardsBid)) GoalMet
-    else GoalMissed(missedBy(cardsBid, 0))
+    else GoalMissed(missedBy(cardsBid))
   }
 
   def getBonusesAndPenalties(scores: Map[Player, Int],
                              chief: Player,
-                             partner: Player,
+                             partner: Option[Player],
                              chiefTrump: Trump,
                              cardsBid: Int): Map[Player, Int] = {
-    val numberOfPlayers = scores.size
-    val chiefsTeamScore = scores(chief) + scores(partner)
+    val players = scores.keys.toSet
+    val numberOfPlayers = players.size
+    val chiefsTeamScore = scores(chief) + (partner map scores getOrElse 0)
     val goalOutcome = getGoalOutcome(numberOfPlayers, cardsBid, chiefsTeamScore)
     goalOutcome match {
       case GoalMet => {
         val chiefTeamsBonus = bonusAmount(chiefTrump, cardsBid)
-        Map(chief -> chiefTeamsBonus, partner -> chiefTeamsBonus)
+        Map(chief -> chiefTeamsBonus) ++ partner.map(_ -> chiefTeamsBonus)
       }
       case GoalMissed(margin) => {
         val chiefsPenalty = margin * 10
         val oppositionBonus = margin * 5
-        val players = scores.keys
-        val opposition =
-          players.filter(player => player != chief && player != partner)
+        val opposition = players - chief -- partner
         Map(chief -> -chiefsPenalty) ++ opposition.map(_ -> oppositionBonus)
       }
     }
 
   }
 
-  // def addBonusesAndPenalties(scores:Map[Player,Int],chief:Player,partner:Player,chiefTrump:Trump,cardsBid:Int):Map[Player,Int] = {
-  //   import Util._
-  //   val bonuses = getBonusesAndPenalties(scores,chief,partner,chiefTrump,cardsBid)
-  //   mapKeys[Player,Int](bonuses.keys.toSet).modify{case (player,score) => (player,score + bonuses(player))}(scores)
+  def getScoresWithoutBonuses(players: List[Player],
+                              tricks: List[WonTrick]): Map[Player, Int] = {
+    val scores = tricks.groupBy(_.winner).mapValues { wonTricks =>
+      val cardPoints = for {
+        wonTrick <- wonTricks
+        card <- wonTrick.trick
+      } yield card.points
+      cardPoints.sum
+    }
+    scores ++ players.filterNot(scores.keys.toSet).map(_ -> 0)
+  }
 
-  // }
+  def getTotalScores(tricks: List[WonTrick],
+                     chiefTrump: Trump,
+                     cardsBid: Int,
+                     chief: Player,
+                     partner: Option[Player],
+                     players: List[Player]) = {
+    val scores = getScoresWithoutBonuses(players, tricks)
+    val bonusesAndPenalties =
+      getBonusesAndPenalties(scores, chief, partner, chiefTrump, cardsBid)
+    bonusesAndPenalties.foldLeft(scores) {
+      case (acc, (player, bonus)) => acc + (player -> (acc(player) + bonus))
+    }
+  }
 
 }

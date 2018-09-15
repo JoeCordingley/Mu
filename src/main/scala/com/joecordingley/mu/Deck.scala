@@ -3,6 +3,7 @@ package com.joecordingley.mu
 /**
   * Created by joe on 20/05/17.
   */
+import scala.collection.SortedMap
 sealed trait Suit
 sealed trait Rank {
   val value: Int
@@ -53,13 +54,13 @@ object Deck {
     case _ => 1
   }
 
-  val Full: List[Card] = makeDeck(Suits)
+  val Full: Set[Card] = makeDeck(Suits)
 
-  val Reduced: List[Card] = makeDeck(ReducedSuits)
+  val Reduced: Set[Card] = makeDeck(ReducedSuits)
 
   private def makeDeck(suits: Set[Suit]) =
     for {
-      suit <- suits.toList
+      suit <- suits
       rank <- Ranks
     } yield Card(suit, rank)
 

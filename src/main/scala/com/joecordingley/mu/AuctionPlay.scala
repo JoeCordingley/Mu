@@ -16,6 +16,7 @@ sealed trait AuctionStateADT[A] extends AuctionADT[A]
 case class PlaceBid(bid: Bid) extends AuctionStateADT[Unit]
 case object GetStatus extends AuctionStateADT[AuctionStatus]
 case class GetTrump(player: Player) extends PlayerADT[Trump]
+case class SetTrump(trump: Trump) extends AuctionStateADT[Unit]
 case class GetPartner(player: Player) extends PlayerADT[Player]
 case object NextPlayer extends AuctionStateADT[Player]
 case class GetBid(player: Player) extends PlayerADT[Bid]
@@ -30,6 +31,7 @@ object AuctionPlay {
   def placeBid(bid: Bid): AuctionFree[Unit] = liftF(PlaceBid(bid))
   def getStatus: AuctionFree[AuctionStatus] = liftF(GetStatus)
   def getTrump(player: Player): AuctionFree[Trump] = liftF(GetTrump(player))
+  def setTrump(trump: Trump): AuctionFree[Unit] = liftF(SetTrump(trump))
   def getPartner(player: Player): AuctionFree[Player] =
     liftF(GetPartner(player))
   def nextPlayer: AuctionFree[Player] = liftF(NextPlayer)
@@ -55,6 +57,7 @@ object AuctionPlay {
             case ChiefAndVice(chief, vice) =>
               for {
                 viceTrump <- getTrump(vice)
+                _ <- setTrump(viceTrump)
                 chiefTrump <- getTrump(chief)
                 partner <- getPartner(chief)
               } yield TwoTrumps(chief, chiefTrump, partner, viceTrump)

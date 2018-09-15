@@ -26,6 +26,4 @@ package com.joecordingley.mu
 //  def nextPlayers:Players = Players(all.tail :+ current)
 //}
 //trait Event
-trait Player {
-  val id: Int
-}
+case class Player(id: Int)

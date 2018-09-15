@@ -7,6 +7,7 @@ case object Pass extends Bid
 case class Raise(cards: Set[Card]) extends Bid
 
 object Auction {
+  type InitialHand = Set[Card]
   def initial(playerHands: List[(Player, InitialHand)]): UnfinishedAuction =
     new UnfinishedAuction(AuctionState(playerHands, Vector()))
 
@@ -18,15 +19,20 @@ object Auction {
     Ordering.by[Set[Card], Iterable[Int]](cards =>
       cards.size :: amtForAllRanks(cards))
   }
-  type InitialHand = Set[Card]
 }
 
 sealed trait ResolvedAuction
 sealed trait AuctionOutcome
-case class FinishedAuctionObject(state: AuctionState, outcome: AuctionOutcome)
-    extends AuctionObject
+case class FinishedAuctionObject(state: AuctionState,
+                                 outcome: AuctionOutcome,
+                                 chosenTrumps: Set[Trump] = Set.empty)
+    extends AuctionObject {
+  def setTrump(trump: Trump) =
+    this.copy(state = state.copy(chosenTrumps = chosenTrumps + trump))
+}
 case class AuctionState(playerHands: List[(Player, InitialHand)],
-                        bids: Vector[Bid]) {
+                        bids: Vector[Bid],
+                        chosenTrumps: Set[Trump] = Set.empty) {
   val players = playerHands.map(_._1)
   val playerCount = players.size
   val playerSequence = Stream.continually(players).flatten
@@ -39,6 +45,13 @@ case class AuctionState(playerHands: List[(Player, InitialHand)],
         acc.updated(player, acc(player) ++ cards)
       case (acc, _) => acc
     }
+  }
+  def availableTrumpsFor(player: Player) = {
+    val cardTrumps: Set[Trump] = for {
+      card <- totals(player)
+      trump <- Set(SuitTrump(card.suit), NumberTrump(card.rank.value))
+    } yield trump
+    cardTrumps + NoTrump &~ chosenTrumps
   }
   val cardsInHand: Map[Player, Set[Card]] = totals.foldLeft(playerHands.toMap) {
     case (acc, (player, bidTotal)) =>
@@ -61,8 +74,13 @@ case class AuctionState(playerHands: List[(Player, InitialHand)],
       (totals - leader).toList.outrightHighest(viceOrdering.on(_._2)).map(_._1)
     case _ => None
   }
-
+  val validPartners = (leaders) match {
+    case SingleElementSet(leader) => players.toSet - leader -- vice
+    case _                        => Set.empty[Player]
+  }
   val currentPlayer: Player = players(bids.size % playerCount)
+  val maxBidAllowedForCurrentPlayer: Int =
+    maxBid + 1 - totals(currentPlayer).size
 }
 case class TwoTrumps(chief: Player,
                      chiefTrump: Trump,
