@@ -24,11 +24,6 @@ object RandomState {
     val (v1,Vector(n, v2 @ _*)) = vector.splitAt(index)
     (v1 ++ v2,n)
   }
-  type R[A] = State[(Long,Vector[A]), A]
-  def s2[A](v:Vector[A])(implicit a: Applicative[R]):State[Long,Vector[A]] = {
-    val l: State[(Long,Vector[A]),] = (1 to v.length).toVector.traverse[R,Vector[A]](_ => takeRandom)
-    l.transformS[Long]((_,v),_._1)
-  }
   def takeRandom[A]:State[(Long,Vector[A]),A] = {
     def updateSeed: ((Long,Vector[A]),Long) => (Long, Vector[A]) = {
       case ((_,v),seed) => (seed,v)
