@@ -23,16 +23,18 @@ object Auction {
 
 sealed trait ResolvedAuction
 sealed trait AuctionOutcome
-case class FinishedAuctionObject(state: AuctionState,
-                                 outcome: AuctionOutcome,
-                                 chosenTrumps: Set[Trump] = Set.empty)
+case class FinishedAuctionObject(
+    state: AuctionState,
+    outcome: AuctionOutcome,
+    chosenTrumps: Set[Trump] = Set.empty)
     extends AuctionObject {
   def setTrump(trump: Trump) =
     this.copy(state = state.copy(chosenTrumps = chosenTrumps + trump))
 }
-case class AuctionState(playerHands: List[(Player, InitialHand)],
-                        bids: Vector[Bid],
-                        chosenTrumps: Set[Trump] = Set.empty) {
+case class AuctionState(
+    playerHands: List[(Player, InitialHand)],
+    bids: Vector[Bid] = Vector.empty,
+    chosenTrumps: Set[Trump] = Set.empty) {
   val players = playerHands.map(_._1)
   val playerCount = players.size
   val playerSequence = Stream.continually(players).flatten
@@ -76,16 +78,17 @@ case class AuctionState(playerHands: List[(Player, InitialHand)],
   }
   val validPartners = (leaders) match {
     case SingleElementSet(leader) => players.toSet - leader -- vice
-    case _                        => Set.empty[Player]
+    case _ => Set.empty[Player]
   }
   val currentPlayer: Player = players(bids.size % playerCount)
   val maxBidAllowedForCurrentPlayer: Int =
     maxBid + 1 - totals(currentPlayer).size
 }
-case class TwoTrumps(chief: Player,
-                     chiefTrump: Trump,
-                     partner: Player,
-                     viceTrump: Trump)
+case class TwoTrumps(
+    chief: Player,
+    chiefTrump: Trump,
+    partner: Player,
+    viceTrump: Trump)
     extends ResolvedAuction
 case class OneTrump(chief: Player, chiefTrump: Trump, partner: Player)
     extends ResolvedAuction
@@ -122,8 +125,9 @@ case class UnfinishedAuction(state: AuctionState) extends AuctionObject {
         case leaders =>
           newStatus.lastOfLeadersToRaise match {
             case Some(offender) =>
-              FinishedAuctionObject(newStatus,
-                                    Eklat(offender, leaders - offender))
+              FinishedAuctionObject(
+                newStatus,
+                Eklat(offender, leaders - offender))
             case None => FinishedAuctionObject(newStatus, EklatNoPoints)
           }
       }

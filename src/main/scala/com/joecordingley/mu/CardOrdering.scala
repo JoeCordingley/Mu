@@ -12,9 +12,9 @@ object CardOrdering {
     cardIsTrump(trumps.minor)
 
   def cardIsTrump(trump: Trump)(card: Card): Boolean = trump match {
-    case SuitTrump(suit)   => card.suit == suit
+    case SuitTrump(suit) => card.suit == suit
     case NumberTrump(rank) => card.rank.value == rank
-    case NoTrump           => false
+    case NoTrump => false
   }
 
   def apply(trumps: Trumps, cardLed: Card): Ordering[Card] = Ordering.by {

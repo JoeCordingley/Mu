@@ -2,22 +2,25 @@ package com.joecordingley.mu
 
 import com.joecordingley.mu.CardPlayObject._
 
-case class CardPlayObject(playerHands: List[(Player, Set[Card])],
-                          trumps: Trumps,
-                          tricks: Vector[TrickAsPlayed],
-                          currentTrick: Vector[Card],
-                          numberOfCardsBid: Int,
-                          chief: Player,
-                          partner: Option[Player]) {
+case class CardPlayObject(
+    playerHands: List[(Player, Set[Card])],
+    trumps: Trumps,
+    tricks: Vector[TrickAsPlayed],
+    currentTrick: Vector[Card],
+    numberOfCardsBid: Int,
+    chief: Player,
+    partner: Option[Player]) {
   val players = playerHands.map(_._1)
 
-  private def cardsPreviouslyPlayedBy(player: Player): Set[Card] = for {
-    trick: TrickAsPlayed <- tricks.toSet
-    playedCard <- trick
-    if playedCard.player == player
-  } yield playedCard.card
+  private def cardsPreviouslyPlayedBy(player: Player): Set[Card] =
+    for {
+      trick: TrickAsPlayed <- tricks.toSet
+      playedCard <- trick
+      if playedCard.player == player
+    } yield playedCard.card
 
-  def cardsNotYetInFinishedTrick(player: Player):Set[Card] = playerHands.toMap.apply(player) &~ cardsPreviouslyPlayedBy(player)
+  def cardsNotYetInFinishedTrick(player: Player): Set[Card] =
+    playerHands.toMap.apply(player) &~ cardsPreviouslyPlayedBy(player)
 
   def playCard(card: Card): CardPlayObject =
     this.copy(currentTrick = currentTrick :+ card)
@@ -36,12 +39,13 @@ case class CardPlayObject(playerHands: List[(Player, Set[Card])],
   }
 
   def getScores(wonTricks: List[WonTrick]): CardPlayScores =
-    Points.getTotalScores(wonTricks,
-                          trumps.major,
-                          numberOfCardsBid,
-                          chief,
-                          partner,
-                          players)
+    Points.getTotalScores(
+      wonTricks,
+      trumps.major,
+      numberOfCardsBid,
+      chief,
+      partner,
+      players)
 
 }
 

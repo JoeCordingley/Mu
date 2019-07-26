@@ -16,19 +16,20 @@ object Points {
   }
 
   def bonusAmount(chiefTrump: Trump, cardsBid: Int): Int = chiefTrump match {
-    case _: SuitTrump                    => cardsBid * 10
+    case _: SuitTrump => cardsBid * 10
     case NumberTrump(1) | NumberTrump(7) => 10 + cardsBid * 10
-    case NumberTrump(_)                  => 20 + cardsBid * 10
-    case NoTrump                         => 30 + cardsBid * 10
+    case NumberTrump(_) => 20 + cardsBid * 10
+    case NoTrump => 30 + cardsBid * 10
   }
 
   sealed trait GoalOutcome
   case object GoalMet extends GoalOutcome
   case class GoalMissed(margin: Int) extends GoalOutcome
 
-  def getGoalOutcome(numberOfPlayers: Int,
-                     cardsBid: Int,
-                     scoreGot: Int): GoalOutcome = {
+  def getGoalOutcome(
+      numberOfPlayers: Int,
+      cardsBid: Int,
+      scoreGot: Int): GoalOutcome = {
 
     def scoreMet(cardsBid: Int): Boolean =
       scoreGot > goal(numberOfPlayers, cardsBid)
@@ -39,11 +40,12 @@ object Points {
     else GoalMissed(missedBy(cardsBid))
   }
 
-  def getBonusesAndPenalties(scores: Map[Player, Int],
-                             chief: Player,
-                             partner: Option[Player],
-                             chiefTrump: Trump,
-                             cardsBid: Int): Map[Player, Int] = {
+  def getBonusesAndPenalties(
+      scores: Map[Player, Int],
+      chief: Player,
+      partner: Option[Player],
+      chiefTrump: Trump,
+      cardsBid: Int): Map[Player, Int] = {
     val players = scores.keys.toSet
     val numberOfPlayers = players.size
     val chiefsTeamScore = scores(chief) + (partner map scores getOrElse 0)
@@ -63,8 +65,9 @@ object Points {
 
   }
 
-  def getScoresWithoutBonuses(players: List[Player],
-                              tricks: List[WonTrick]): Map[Player, Int] = {
+  def getScoresWithoutBonuses(
+      players: List[Player],
+      tricks: List[WonTrick]): Map[Player, Int] = {
     val scores = tricks.groupBy(_.winner).mapValues { wonTricks =>
       val cardPoints = for {
         wonTrick <- wonTricks
@@ -75,12 +78,13 @@ object Points {
     scores ++ players.filterNot(scores.keys.toSet).map(_ -> 0)
   }
 
-  def getTotalScores(tricks: List[WonTrick],
-                     chiefTrump: Trump,
-                     cardsBid: Int,
-                     chief: Player,
-                     partner: Option[Player],
-                     players: List[Player]) = {
+  def getTotalScores(
+      tricks: List[WonTrick],
+      chiefTrump: Trump,
+      cardsBid: Int,
+      chief: Player,
+      partner: Option[Player],
+      players: List[Player]) = {
     val scores = getScoresWithoutBonuses(players, tricks)
     val bonusesAndPenalties =
       getBonusesAndPenalties(scores, chief, partner, chiefTrump, cardsBid)

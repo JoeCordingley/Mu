@@ -16,8 +16,9 @@ object CLI {
   def toSortedMap[V](s: Set[V]): SortedMap[Int, V] =
     SortedMap(s.toList.zipWithIndex.map(_.swap): _*)
 
-  def availabilityString[A: Show](playerString: String,
-                                  choices: SortedMap[Int, A]) =
+  def availabilityString[A: Show](
+      playerString: String,
+      choices: SortedMap[Int, A]) =
     s"player $playerString, choose from\n" + choices
       .map {
         case (k, c) => s"$k: ${c.show}"
@@ -37,12 +38,13 @@ object CLI {
 
   def keepAsking[A](io: IO[Option[A]]): IO[A] = io.flatMap {
     case Some(a) => IO.pure(a)
-    case None    => keepAsking(io)
+    case None => keepAsking(io)
   }
 
-  def askPlayerForBid(player: Player,
-                      availableCards: Set[Card],
-                      maxBidSize: Int): IO[Bid] = {
+  def askPlayerForBid(
+      player: Player,
+      availableCards: Set[Card],
+      maxBidSize: Int): IO[Bid] = {
     val map = toSortedMap(availableCards)
     val validInts = map.keys.toSet
     val parseFunction: String => Option[Bid] = parseCommaSeparatedInts(_)
@@ -54,9 +56,10 @@ object CLI {
       }
     askPlayerForX(player, map, parseFunction)
   }
-  def askPlayerForX[X, C: Show](player: Player,
-                                map: SortedMap[Int, C],
-                                parseFunction: String => Option[X]): IO[X] = {
+  def askPlayerForX[X, C: Show](
+      player: Player,
+      map: SortedMap[Int, C],
+      parseFunction: String => Option[X]): IO[X] = {
     val prompt = availabilityString(player.show, map)
     val question = for {
       _ <- putLine(prompt)
@@ -71,12 +74,14 @@ object CLI {
     askPlayerForX(player, map, parseFunction)
   }
 
-  def askPlayerForPartner(player: Player,
-                          availablePartners: Set[Player]): IO[Player] =
+  def askPlayerForPartner(
+      player: Player,
+      availablePartners: Set[Player]): IO[Player] =
     askPlayerSimple(player, availablePartners)
 
-  def askPlayerForTrump(player: Player,
-                        availableTrumps: Set[Trump]): IO[Trump] =
+  def askPlayerForTrump(
+      player: Player,
+      availableTrumps: Set[Trump]): IO[Trump] =
     askPlayerSimple(player, availableTrumps)
 
   def askPlayerForCard(player: Player, availableCards: Set[Card]): IO[Card] =

@@ -13,7 +13,7 @@ object AuctionCompilers {
     override def apply[A](fa: AuctionStateADT[A]) = fa match {
       case PlaceBid(bid) =>
         modify[AuctionObject] {
-          case s: UnfinishedAuction     => s.bid(bid)
+          case s: UnfinishedAuction => s.bid(bid)
           case _: FinishedAuctionObject => throw new Exception("is finished")
         }
       case GetStatus =>
@@ -26,7 +26,7 @@ object AuctionCompilers {
       case SetTrump(trump) =>
         modify[AuctionObject] {
           case s: FinishedAuctionObject => s.setTrump(trump)
-          case _                        => throw new Exception("Is not finished")
+          case _ => throw new Exception("Is not finished")
         }
     }
   }
@@ -39,16 +39,18 @@ object AuctionCompilers {
     def inner[A](fa: PlayerADT[A]): AuctionObjectIO[A] = fa match {
       case GetBid(player) =>
         auctionObject =>
-          CLI.askPlayerForBid(player,
-                              auctionObject.state.cardsInHand(player),
-                              auctionObject.state.maxBidAllowedForCurrentPlayer)
+          CLI.askPlayerForBid(
+            player,
+            auctionObject.state.cardsInHand(player),
+            auctionObject.state.maxBidAllowedForCurrentPlayer)
       case GetPartner(player) =>
         auctionObject =>
           CLI.askPlayerForPartner(player, auctionObject.state.validPartners)
       case GetTrump(player) =>
         auctionObject =>
-          CLI.askPlayerForTrump(player,
-                                auctionObject.state.availableTrumpsFor(player))
+          CLI.askPlayerForTrump(
+            player,
+            auctionObject.state.availableTrumpsFor(player))
 
     }
   }

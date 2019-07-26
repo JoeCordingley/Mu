@@ -45,15 +45,17 @@ object CardPlayRound {
       _ <- recordTrick(trick)
     } yield wonTrick
 
-  def play(startingPlayer: Player,
-           numberOfTricks: Int): CardPlayFree[CardPlayScores] =
+  def play(
+      startingPlayer: Player,
+      numberOfTricks: Int): CardPlayFree[CardPlayScores] =
     for {
       wonTricks <- playNTricks(numberOfTricks, startingPlayer)
       scores <- getScores(wonTricks)
     } yield scores
 
-  def playNTricks(n: Int,
-                  startingPlayer: Player): CardPlayFree[List[WonTrick]] = {
+  def playNTricks(
+      n: Int,
+      startingPlayer: Player): CardPlayFree[List[WonTrick]] = {
     val init: Player => CardPlayFree[List[WonTrick]] = _ => Free.pure(Nil)
     val f = (1 to n).foldRight(init) {
       case (_, acc) =>

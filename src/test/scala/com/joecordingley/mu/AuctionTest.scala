@@ -35,7 +35,7 @@ class AuctionTest extends FreeSpec with Matchers {
       case PlaceBid(b) =>
         State.modify {
           case s: UnfinishedAuction => s.bid(b)
-          case _                    => throw new Exception("is finished")
+          case _ => throw new Exception("is finished")
         }
       case _ => throw new Exception("unexpected input")
     }

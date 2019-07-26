@@ -11,19 +11,14 @@ case class Score(goal: Int) extends EndCondition
 case class Rounds(count: Int) extends EndCondition
 object Game {
 
-  def deal(players: List[Player]): List[(Player, Set[Card])] = {
-    import scala.util.Random._
+  def deal(players: List[Player]): State[Long,List[(Player, Set[Card])]] = {
     val numberOfPlayers = players.size
-    val deck = numberOfPlayers match {
-      case 3         => Deck.Reduced
+    val deck: Set[Card] = numberOfPlayers match {
+      case 3 => Deck.Reduced
       case 4 | 5 | 6 => Deck.Full
-      case _         => throw new Exception("invalid amt of players")
+      case _ => throw new Exception("invalid amt of players")
     }
-    players.zip(
-      shuffle(deck.toList)
-        .grouped(deck.size / numberOfPlayers)
-        .map(_.toSet)
-        .toList)
+    RandomState.dealAllEvenly(deck, numberOfPlayers).map(players.zip(_))
   }
 
   type Scores = Map[Player, Int]
